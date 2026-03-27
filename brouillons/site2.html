@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laminoir — Énergie</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body,{delimiters:[
+            {left:'$$',right:'$$',display:true},
+            {left:'$',right:'$',display:false}]})">
+    </script>
+
+    <style>
+        /* ════════════════════════════════════════════════
+           PALETTE — thème forge / acier chaud
+           ════════════════════════════════════════════════ */
+        :root {
+            --fond:        #ede8df;       /* parchemin chaud */
+            --fond-side:   #e0d9ce;       /* côtés légèrement plus sombres */
+            --carte:       #f7f3ec;       /* cartes / blocs */
+            --texte:       #1e1b15;
+            --forge:       #b84e0a;       /* orange forge */
+            --braise:      #d08a0a;       /* ambre braise */
+            --acier:       #3e5263;       /* bleu acier froid */
+            --acier-clair: #d5e2ec;
+            --fumee:       #7a756c;       /* gris fumée */
+            --vert:        #2a6e40;
+            --rouge:       #a82820;
+            --rouge-clair: #f5deda;
+            --vert-clair:  #d8f0e4;
+            --blanc:       #faf7f2;
+            --bord:        #cec6b8;
+        }
+
+
+        /* ════════════════════════════════════════════════
+           BASE
+           ════════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--fond);
+            color: var(--texte);
+            font-family: 'Georgia', serif;
+            font-size: 1rem;
+            line-height: 1.72;
+        }
+
+        /* ════════════════════════════════════════════════
+           HEADER
+           ════════════════════════════════════════════════ */
+        header {
+            background: #17130d;
+            color: #f0ebe0;
+            padding: 3.5rem 2rem 3rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Texture rayures obliques subtiles */
+        header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(
+                -55deg,
+                transparent 0px,
+                transparent 18px,
+                rgba(255,255,255,0.025) 18px,
+                rgba(255,255,255,0.025) 20px
+            );
+            pointer-events: none;
+        }
+
+        .header-label {
+            font-family: sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--braise);
+            margin-bottom: 1rem;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: normal;
+            letter-spacing: 0.02em;
+            margin-bottom: 0.6rem;
+        }
+
+        header h1 span { color: var(--braise); }
+
+        .header-sous {
+            font-style: italic;
+            font-size: 1.05rem;
+            color: rgba(240,235,224,0.7);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header-donnees {
+            margin-top: 1.8rem;
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .header-donnee {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            padding: 0.5rem 1.2rem;
+            font-family: sans-serif;
+            font-size: 0.82rem;
+            color: rgba(240,235,224,0.8);
+        }
+
+        .header-donnee strong { color: var(--braise); }
+
+        /* ════════════════════════════════════════════════
+           GRILLE DE MISE EN PAGE : côté | centre | côté
+           ════════════════════════════════════════════════ */
+        .grille {
+            display: grid;
+            grid-template-columns: 230px 1fr 230px;
+            gap: 0;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        /* Centre */
+        .centre {
+            padding: 3rem 2.8rem;
+            border-left: 1px solid var(--bord);
+            border-right: 1px solid var(--bord);
+        }
+
+        /* Côté gauche */
+        .gauche {
+            padding: 3rem 1.4rem 3rem 1.8rem;
+            background: var(--fond-side);
+        }
+
+        /* Côté droit */
+        .droite {
+            padding: 3rem 1.8rem 3rem 1.4rem;
+            background: var(--fond-side);
+        }
+
+        /* Séparateur horizontal entre sections */
+        .sep-section {
+            grid-column: 1 / -1;
+            height: 3px;
+            background: linear-gradient(to right, transparent, var(--forge), var(--braise), var(--forge), transparent);
+        }
+
+        /* ════════════════════════════════════════════════
+           TYPOGRAPHIE CENTRE
+           ════════════════════════════════════════════════ */
+        .centre h2 {
+            font-size: 1.7rem;
+            font-weight: normal;
+            color: var(--forge);
+            margin-bottom: 0.3rem;
+        }
+
+        .centre .num-section {
+            font-family: sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--fumee);
+            margin-bottom: 0.5rem;
+        }
+
+        .centre h3 {
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: sans-serif;
+            color: var(--acier);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin: 2rem 0 0.6rem;
+        }
+
+        .centre p { margin-bottom: 0.9rem; }
+
+        /* ════════════════════════════════════════════════
+           BLOCS FORMULE
+           ════════════════════════════════════════════════ */
+        .formule {
+            background: var(--acier-clair);
+            border-left: 4px solid var(--acier);
+            border-radius: 0 6px 6px 0;
+            padding: 0.9rem 1.2rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .formule-note {
+            font-size: 0.8rem;
+            color: var(--fumee);
+            font-style: italic;
+            margin-top: 0.35rem;
+            font-family: sans-serif;
+        }
+
+
+
+
+
+
+        /* ════════════════════════════════════════════════
+           BLOCS CONCLU
+           ════════════════════════════════════════════════ */
+        
+        /* --- Bloc de conclusion général --- */
+        .conclu {
+            background: #fdf5f0; /* Un fond orange très crème pour la clarté */
+            border-left: 4px solid #b84e0a; /* La couleur Forge en bordure */
+            border-radius: 0 6px 6px 0;
+            padding: 0.9rem 1.2rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+
+        .conclu-note {
+            font-size: 0.8rem;
+            color: #7a3407; /* Orange forge très sombre pour le texte secondaire */
+            font-style: italic;
+            margin-top: 0.35rem;
+            font-family: sans-serif;
+        }
+
+        /* --- Style du Cadre Principal --- */
+        .conclu-cadre {
+            background-color: #fdf5f0; 
+            border: 1px solid #d98d5b; /* Version un peu plus claire de la forge */
+            border-left: 8px solid #b84e0a; /* Bordure épaisse pour le style industriel */
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(184, 78, 10, 0.1);
+            margin: 2rem 0;
+            position: relative;
+         overflow: hidden;
+        }
+
+            /* --- Décoration : Effet coin corné (style métal plié) --- */
+        .conclu-cadre::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 30px 30px 0;
+            border-color: transparent #d98d5b transparent transparent; 
+            border-radius: 0 12px 0 0;
+            opacity: 0.7;
+        }
+
+        /* --- Texte d'introduction --- */
+        .conclu-intro {
+            font-size: 1.15rem;
+            color: #7a3407; /* Texte sombre pour bien ressortir */
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- Style de la liste --- */
+        .conclu-liste {
+            list-style: none;
+            padding-left: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .conclu-liste li {
+            font-size: 1.15rem;
+            color: #333333; /* Noir anthracite pour une lecture parfaite */
+            margin-bottom: 0.8rem;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        /* Puces personnalisées : Petits losanges forge */
+        .conclu-liste li::before {
+            content: "◆"; 
+            color: #b84e0a; 
+            font-weight: bold;
+            display: inline-block; 
+            width: 1em;
+            margin-left: -1em;
+            font-size: 1.1rem;
+            vertical-align: middle;
+        }
+
+        /* Mise en avant des termes techniques (Gras) */
+        .conclu-liste strong {
+            color: #b84e0a;
+            text-decoration: none; /* Plus propre en orange direct */
+            border-bottom: 1px dashed rgba(184, 78, 10, 0.3);
+        }
+
+        /* ════════════════════════════════════════════════
+           RÉSULTATS
+           ════════════════════════════════════════════════ */
+        .res-ok {
+            background: var(--vert);
+            color: white;
+            border-radius: 6px;
+            padding: 0.8rem 1.2rem;
+            text-align: center;
+            font-size: 1.35rem;
+            margin: 1rem 0;
+        }
+
+        .res-nul {
+            background: var(--rouge-clair);
+            border: 2px solid var(--rouge);
+            border-radius: 6px;
+            padding: 0.7rem 1.2rem;
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 1rem 0;
+        }
+
+        .badge {
+            display: inline-block;
+            font-family: sans-serif;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 0.15em 0.7em;
+            border-radius: 20px;
+        }
+        .badge-ok  { background: #b8e8cc; color: var(--vert); }
+        .badge-nul { background: #f5c4be; color: var(--rouge); }
+
+        /* ════════════════════════════════════════════════
+           TABLEAU
+           ════════════════════════════════════════════════ */
+        .tw { overflow-x: auto; margin: 1rem 0; }
+
+        table { width:100%; border-collapse:collapse; font-size:0.88rem; }
+        th {
+            background: var(--acier);
+            color: white;
+            padding: 0.45rem 0.7rem;
+            text-align: center;
+            font-weight: normal;
+            font-family: sans-serif;
+        }
+        td {
+            padding: 0.45rem 0.7rem;
+            border: 1px solid var(--bord);
+            text-align: center;
+            vertical-align: middle;
+        }
+        tr:nth-child(even) td { background: #e8e2d5; }
+
+        /* ════════════════════════════════════════════════
+           ANNEXES LATÉRALES
+           ════════════════════════════════════════════════ */
+        .annexe {
+            margin-bottom: 1.8rem;
+        }
+
+        .annexe-titre {
+            font-family: sans-serif;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--fumee);
+            border-bottom: 1px solid var(--bord);
+            padding-bottom: 0.3rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .annexe p, .annexe li {
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: #3a3630;
+        }
+
+        .annexe ul { padding-left: 1rem; }
+
+        /* Encadré "Pourquoi ?" */
+        .encadre {
+            background: var(--carte);
+            border: 1px solid var(--bord);
+            border-radius: 6px;
+            padding: 0.75rem 0.9rem;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            margin-bottom: 1.2rem;
+        }
+
+        .encadre-forge {
+            border-left: 3px solid var(--forge);
+            background: #f8ede2;
+        }
+
+        .encadre-vert {
+            border-left: 3px solid var(--vert);
+            background: #eaf5ef;
+        }
+
+        .encadre-rouge {
+            border-left: 3px solid var(--rouge);
+            background: var(--rouge-clair);
+        }
+
+        .encadre strong {
+            display: block;
+            font-family: sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.3rem;
+        }
+        .encadre-forge strong { color: var(--forge); }
+        .encadre-vert  strong { color: var(--vert); }
+        .encadre-rouge strong { color: var(--rouge); }
+
+        .annexe-modele-2 {
+            margin-top: 30rem;
+        }
+
+        .annexe-limites {
+            margin-top: 1rem;
+        }
+
+        /* ════════════════════════════════════════════════
+           CANVAS / BOUTON
+           ════════════════════════════════════════════════ */
+        canvas {
+            width: 100%;
+            display: block;
+            border-radius: 6px;
+            border: 1px solid var(--bord);
+        }
+
+        .btn-anim {
+            display: inline-block;
+            margin: 0.4rem 0 0;
+            padding: 0.28rem 1rem;
+            background: var(--acier);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-family: sans-serif;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .btn-anim:hover { background: var(--forge); }
+
+        /* ════════════════════════════════════════════════
+           PLACEHOLDER IMAGE / MÉDIA
+           ════════════════════════════════════════════════ */
+        .media {
+            width: 100%;
+            min-height: 100px;
+            background: var(--fond);
+            border: 2px dashed var(--bord);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--fumee);
+            font-style: italic;
+            font-family: sans-serif;
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .media-img { max-width:100%; border-radius:6px; display:block; margin-bottom:1rem; }
+
+        .media-fig {
+            margin: 1rem 0 1.2rem;
+        }
+
+        .media-video {
+            width: 100%;
+            display: block;
+            border-radius: 6px;
+            border: 1px solid var(--bord);
+            background: #000;
+        }
+
+        .media-fig figcaption {
+            margin-top: 0.45rem;
+            font-size: 0.8rem;
+            color: var(--fumee);
+            font-family: sans-serif;
+            text-align: center;
+        }
+        /* ════════════════════════════════════════════════
+           GRAND RÉSULTAT FINAL
+           ════════════════════════════════════════════════ */
+        .grand-res {
+            text-align: center;
+            background: linear-gradient(135deg, var(--acier), #2a3d4d);
+            color: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+        }
+
+        .grand-res .formule-txt {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .grand-res .sub {
+            font-size: 0.88rem;
+            opacity: 0.75;
+            font-family: sans-serif;
+            font-style: italic;
+        }
+
+        /* ════════════════════════════════════════════════
+           FOOTER
+           ════════════════════════════════════════════════ */
+        footer {
+            background: #17130d;
+            color: rgba(240,235,224,0.45);
+            text-align: center;
+            font-family: sans-serif;
+            font-size: 0.78rem;
+            padding: 1.2rem;
+        }
+
+        /* ════════════════════════════════════════════════
+           RESPONSIVE — collapse latérales sous 900px
+           ════════════════════════════════════════════════ */
+        @media (max-width: 900px) {
+            .grille { grid-template-columns: 1fr; }
+            .gauche, .droite { display: none; }
+            .centre { border: none; padding: 2rem 1.2rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     HEADER
+     ══════════════════════════════════════════════════════ -->
+<header>
+    <div class="header-label">CAPECL — Ordre de grandeur</div>
+    <h1>Énergie d'un <span>laminoir</span></h1>
+    <p class="header-sous">Deux approches  pour estimer l'énergie nécessaire à laminer une tôle d'acier</p>
+    <div class="header-donnees">
+        <div class="header-donnee"><strong>$E_\text{acier}$</strong> ≈ 200 GPa</div>
+        <div class="header-donnee"><strong>$E_\text{liaison}$</strong> ≈ 10⁻¹⁹ J</div>
+        <div class="header-donnee"><strong>$l_0$</strong> ≈ 10⁻¹⁰ m</div>
+        <div class="header-donnee"><strong>$V$</strong> = 1 m³ (conservé)</div>
+    </div>
+</header>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 1 — LE PROBLÈME
+     ══════════════════════════════════════════════════════ -->
+<div class="grille">
+
+    <div class="gauche">
+        <div class="annexe">
+            <div class="annexe-titre">Contexte</div>
+            <div class="encadre encadre-forge">
+                <strong>Laminage</strong>
+                Un laminoir permet de réduire l’épaisseur d’une tôle en la faisant passer entre deux rouleaux.
+                En pratique, ce procédé est très utilisé en sidérurgie pour transformer de grosses plaques d’acier
+                en tôles plus fines.
+            </div>
+        </div>
+
+        <div class="annexe">
+            <div class="annexe-titre">Hypothèse</div>
+            <div class="encadre encadre-vert">
+                <strong>Volume conservé</strong>
+                    On suppose que le volume de l’acier est conservé pendant le laminage car la déformation 
+                    correspond essentiellement à un changement de forme : la matière ne disparaît pas et se réorganise 
+                    sans variation notable de volume.            
+            </div>
+        </div>
+    </div>
+
+    <div class="centre">
+        <div class="num-section">Section 1</div>
+        <h2>Le problème</h2>
+
+        <p>
+            On considère une tôle d’acier que l’on fait passer dans un laminoir.
+            On s’intéresse à la transformation suivante :
+            l’épaisseur est divisée par 2, la longueur est multipliée par 2
+            et la largeur reste inchangée.
+        </p>
+
+        <figure class="media-fig">
+            <video class="media-video" controls playsinline preload="metadata">
+                <source src="video_explicative.mp4" type="video/mp4">
+                Votre navigateur ne prend pas en charge la lecture de cette vidéo.
+            </video>
+            <figcaption>
+                Passage d’une tôle entre deux rouleaux du laminoir.
+            </figcaption>
+        </figure>
+
+        <p>
+            On cherche à estimer l’ordre de grandeur de l’<strong>énergie mécanique </strong>nécessaire
+            pour réaliser cette transformation.
+        </p>
+
+        <div class="tw">
+        <table>
+            <tr>
+                <th></th>
+                <th>Épaisseur</th>
+                <th>Longueur</th>
+                <th>Largeur</th>
+            </tr>
+            <tr>
+                <td><strong>Initiale</strong></td>
+                <td>$e_i = 10\ \text{cm}$</td>
+                <td>$L_i = 5\ \text{m}$</td>
+                <td>$\ell = 2\ \text{m}$</td>
+            </tr>
+            <tr>
+                <td><strong>Finale</strong></td>
+                <td>$e_f = 5\ \text{cm}$</td>
+                <td>$L_f = 10\ \text{m}$</td>
+                <td>$\ell = 2\ \text{m}$</td>
+            </tr>
+        </table>
+        </div>
+
+        <p>
+            Avec ces dimensions, le volume initial et le volume final valent :
+        </p>
+
+        <div class="formule">
+            $$V_i = e_iL_i\ell = 0{,}10\times 5\times 2 = 1\ \text{m}^3$$
+            $$V_f = e_fL_f\ell = 0{,}05\times 10\times 2 = 1\ \text{m}^3$$
+        </div>
+
+        <p>
+            Le volume de la tôle est donc conservé au cours du laminage.
+            La suite consiste à proposer deux estimations de l’énergie mise en jeu.
+        </p>
+    </div>
+
+    <div class="droite">
+        <div class="annexe">
+            <div class="annexe-titre">But</div>
+            <div class="encadre encadre-forge">
+                <strong>Ordre de grandeur</strong>
+                On ne cherche pas une valeur exacte, mais seulement à savoir si l’énergie
+                à fournir est plutôt de l’ordre du joule, du mégajoule ou du gigajoule.
+            </div>
+        </div>
+        <div class="annexe">
+            <div class="annexe-titre">Deux stratégies</div>
+            <div class="encadre encadre-forge">
+                <strong>Approche 1 — Macroscopique</strong>
+                On modélise la tôle comme un solide et on estime l’énergie
+                à partir d’un modèle élastique simplifié.
+            </div>
+            <div class="encadre encadre-vert">
+                <strong>Approche 2 — Microscopique</strong>
+                On raisonne à l’échelle atomique en estimant l’énergie des liaisons nécessaire à la déformation du métal.
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="sep-section"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 2 — APPROCHE 1 : MODÈLE ÉLASTIQUE
+     ══════════════════════════════════════════════════════ -->
+<div class="grille">
+
+    <div class="gauche">
+    </div>
+
+    <div class="centre">
+        <div class="num-section">Section 2</div>
+        <h2>Approche 1 — Modèle élastique simplifié</h2>
+
+    <p>
+        Dans cette première approche, on modélise la tôle comme un assemblage de <strong>ressorts microscopiques</strong> (loi de Hooke).
+        Pour estimer l’énergie mise en jeu, on décompose la transformation de façon <strong>fictive</strong> en
+        <strong>deux étapes successives</strong> :
+        un écrasement, puis un étirement.
+        Ce modèle ne décrit pas fidèlement le procédé réel : après le laminage,
+        la tôle ne retrouve <strong>pas</strong> sa forme initiale, alors que des ressorts le feraient.
+    </p>
+
+        <div class="formule">
+            $$\text{Étape 1 : écrasement} \qquad e_i=10\ \text{cm} \longrightarrow e_f=5\ \text{cm}$$
+            $$\text{Étape 2 : étirement} \qquad L_i=5\ \text{m} \longrightarrow L_f=10\ \text{m}$$
+        </div>
+
+        <figure class="media-fig">
+            <canvas id="anim-young" width="600" height="200"></canvas>
+            <button id="btn-young" class="btn-anim">▶ Play</button>
+            <figcaption>
+                Schéma simplifié des deux étapes du modèle : écrasement de la tôle, puis étirement longitudinal.
+            </figcaption>            
+        </figure>
+
+        <p>
+            Pour une déformation unidimensionnelle selon un axe $\vec e_x$, on rappelle la loi de Hooke :
+        </p>
+
+        <div class="formule">
+            $$\mathrm d\vec{F} = -E\,\mathrm dS\,\frac{\partial u}{\partial x}\,\vec e_x$$
+        </div>
+
+        <p>
+            On note le taux de déformation
+            $ \varepsilon = \dfrac{\partial u}{\partial x} $.
+            En supposant la déformation <strong>homogène</strong> sur toute la section de la tôle,
+            on peut considérer $\varepsilon$ uniforme.
+            En intégrant sur cette section, on obtient finalement :
+        </p>
+
+        <div class="formule">
+            $$\vec F=-E\,S\,\varepsilon\,\vec e_x$$
+        </div>
+
+        <p>
+            On pose la déformation relative
+            $ \varepsilon = \dfrac{\Delta L}{L} $,
+            où $\Delta L$ est la variation de la dimension considérée et $L$ sa valeur initiale.
+            La force varie au cours de la déformation (elle augmente progressivement),
+            il faut donc intégrer :
+        </p>
+
+        <div class="formule">
+            $$W=\int_0^{\Delta L} E\,S\,\frac{r}{L}\,\mathrm dr = \frac12\,E\,S\,\varepsilon\,\Delta L$$
+        </div>
+
+
+
+        <p>
+            On applique maintenant cette formule aux deux étapes de la transformation.
+        </p>
+
+        <div class="tw">
+            <table>
+                <tr>
+                    <th>Étape</th>
+                    <th>$S$</th>
+                    <th>$\varepsilon_f$</th>
+                    <th>$\Delta L$</th>
+                    <th>$W$</th>
+                </tr>
+                <tr>
+                    <td>Écrasement</td>
+                    <td>$5\times 2 = 10\ \text{m}^2$</td>
+                    <td>$\dfrac{10-5}{10}=\dfrac12$</td>
+                    <td>$5\ \text{cm}$</td>
+                    <td>
+                        $$W_\text{écrasement} \sim 2{,}5\times10^{10}\ \text{J}$$
+                    </td>
+                </tr>
+                <tr>
+                    <td>Étirement</td>
+                    <td>$0{,}05\times 2 = 0{,}1\ \text{m}^2$</td>
+                    <td>$\dfrac{10-5}{5}=1$</td>
+                    <td>$5\ \text{m}$</td>
+                    <td>
+                        $$W_\text{étirement} \sim 5\times10^{10}\ \text{J}$$
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <p>
+            L’énergie totale estimée par ce modèle est donc :
+        </p>
+
+        <div class="formule">
+            $$W_\text{tot} = W_\text{écrasement} + W_\text{étirement} \sim 7{,}5\times10^{10}\ \text{J}$$
+        </div>
+
+        <div class="res-ok">
+            $$W_\text{tot} \sim 10^{11}\ \text{J} \;\approx\; 100\ \text{GJ}$$
+        </div>
+    </div>
+
+    <div class="droite">
+        <div class="annexe">
+        <div class="encadre encadre-forge">
+            <strong>Régime quasi-statique</strong>
+            On suppose que le laminage est suffisamment lent pour que la tôle passe par une succession
+            d’états d’équilibre. On peut ainsi appliquer la loi de Hooke à chaque instant de la déformation.
+        </div>
+        </div>
+
+        <div class="annexe">
+        <div class="encadre encadre-rouge">
+            <strong>Attention — validité de Hooke</strong>
+            La loi de Hooke modélise la matière comme des ressorts.
+            Or ici, $\varepsilon_f = 1$ pour l’étirement : on comprime
+            le « ressort » sur une distance égale à sa propre taille !
+            On sort très largement du domaine où ce modèle a un sens
+            ($\varepsilon \lesssim 10^{-3}$ pour l’acier).
+            Le résultat est donc certainement une <strong>surestimation</strong>.
+        </div>
+        </div>
+    </div>
+
+</div>
+<div class="sep-section"></div>
+<!-- ══════════════════════════════════════════════════════
+     SECTION 3 — APPROCHE 2A : UNE SURFACE
+     ══════════════════════════════════════════════════════ -->
+<div class="grille">
+
+    <div class="gauche">
+
+        <div class="annexe annexe-limites">
+            <div class="annexe-titre">Ordre de grandeur</div>
+            <div class="encadre encadre-forge">
+                <strong>Limites du modèle B</strong>
+                Ce modèle suppose que <em>toutes</em> les liaisons sont rompues sans jamais se reformer :
+                cela revient à vaporiser le bloc.
+                En réalité, les liaisons se reforment au fur et à mesure de la déformation.
+                $E_B$ est donc une borne supérieure <strong>très grossière</strong>.
+            </div>
+        </div>
+    </div>
+
+    <div class="centre">
+        <div class="num-section">Section 3</div>
+        <h2>Approche 2 — Énergie de liaison atomique</h2>
+
+        <p>
+            Dans cette approche, on cherche à estimer l’énergie mise en jeu à <strong>l’échelle atomique</strong>.
+            On suppose que la déformation peut être reliée à la <strong>rupture de liaisons atomiques</strong>.
+        </p>
+        
+        <div class="formule">
+            $$E_\text{rupture} = N_\text{liaisons} \times E_\text{liaison}$$
+            <div class="formule-note">
+                $E_\text{liaison}\approx 1\ \text{eV}\approx 10^{-19}\ \text{J}$,
+                $l_0\approx10^{-10}\ \text{m}$
+            </div>
+        </div>
+
+        <h3>Premier modèle</h3>
+        <p>
+            Dans ce premier modèle, on imagine que la plaque initiale est comme <strong>séparée en deux couches</strong> de même épaisseur.
+            On modélise alors cette séparation par la <strong>rupture</strong> des liaisons atomiques sur une <strong>seule surface</strong> de section $S$.
+        </p>
+
+        <figure class="media-fig">
+            <canvas id="anim-atomic" width="600" height="200"></canvas>
+            <button id="btn-atomic" class="btn-anim">▶ Play</button>
+            <figcaption>
+                Modèle simplifié : rupture des liaisons sur une seule surface.
+            </figcaption>
+        </figure>
+
+        <div class="formule">
+            $$N = \frac{S}{l_0^2}
+            \quad\Longrightarrow\quad
+            E_A = \frac{S\cdot E_\text{liaison}}{l_0^2}
+            = \frac{10\times10^{-19}}{10^{-20}} \approx 100\ \text{J}$$
+        </div>
+
+
+        <div class="res-nul">
+            <span class="badge badge-nul">Trop faible</span>
+            &nbsp; $100\ \text{J}$ — clairement irréaliste : énergie d'une ampoule pendant 1 s.
+        </div>
+
+    <div class="encadre encadre-rouge">
+        <strong>Interprétation</strong>
+        Ce résultat correspond donc à une <strong>borne inférieure : </strong> 
+        La déformation ne peut pas être limitée à une seule surface.
+        Dans la réalité, elle est répartie dans tout le matériau.
+    </div>
+
+        <h3>Deuxième modèle</h3>
+        <p>
+            On propose alors un <strong>second modèle</strong>. Cette fois, la déformation ne concerne plus une seule surface.
+            Elle est répartie sur un <strong>grand nombre</strong> de plans atomiques.
+            <br>On suppose qu’il y a de l’ordre de $\dfrac{L}{l_0}$  plans qui contribuent tous à la déformation.
+        </p>
+
+                <div class="formule">
+            $$\underbrace{\frac{L}{l_0}}_{N\ \text{plans}}
+            \;\times\;
+            \underbrace{\frac{S}{l_0^2}}_{\text{liaisons/plan}}
+            \;\times\; E_\text{liaison}
+            \;=\; \frac{V}{l_0^3} \times E_\text{liaison}$$
+        </div>
+
+        <div class="formule">
+            $$E_B = \frac{V\cdot E_\text{liaison}}{l_0^3}
+            = \frac{1\times10^{-19}}{10^{-30}} = 10^{11}\ \text{J}$$
+        </div>
+
+        <div class="res-ok">
+            <span class="badge badge-ok">Plus cohérent</span>
+            &nbsp; $E_B \approx 100\ \text{GJ}$
+        </div>
+
+        <div class="encadre encadre-forge">
+            <strong>Interprétation</strong>
+            Ce résultat est une <strong>borne supérieure très grossière</strong> : 
+            il correspond à l'énergie nécessaire pour casser <em>toutes</em> les liaisons sur <em>tous</em> les plans du bloc,
+            c'est-à-dire pour le <strong>vaporiser</strong> entièrement.
+            En réalité, lors du laminage, les liaisons cassées se <strong>reforment</strong> 
+            immédiatement après : seule une fraction de l'énergie de cohésion est réellement consommée.
+    </div>
+    </div>
+
+    <div class="droite">
+        <div class="annexe">
+            <div class="annexe-titre">Où est l'erreur ?</div>
+            <div class="encadre encadre-rouge">
+                <strong>Casser ≠ Déformer</strong>
+                <u>Hypothèse :</u> la déformation correspond à la rupture de liaisons atomiques sur une seule surface. 
+                <br><u>Réalité :</u> cela reviendrait plutôt à casser le bloc en deux qu’à le déformer.
+            </div>
+        </div>
+
+        <div class="annexe">
+            <div class="annexe-titre">Ordre de grandeur</div>
+            <div class="encadre encadre-forge">
+                <strong>Limite</strong>
+                Ce modèle considère une unique surface alors que la déformation réelle concerne un très grand nombre de plans atomiques. 
+                <br>On peut donc considérer que ce résultat fournit une borne inférieure très grossière de l’ordre de grandeur recherché.
+            </div>
+        </div>
+
+        <div class="annexe">
+            <div class="annexe-titre">Que peut-on en tirer?</div>
+            <div class="encadre encadre-vert">
+                <strong>Analyse</strong>
+                Ainsi, avec ce modèle plus réaliste que le précédent, on obtient un ordre de grandeur du même type que dans l’approche macroscopique. 
+                L’idée est que la déformation n’est pas localisée sur une seule surface, mais répartie sur un très grand nombre de plans atomiques.
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="sep-section"></div>
+
+<!-- ══════════════════════════════════════════════════════
+     SECTION 4 — CONCLUSION
+     ══════════════════════════════════════════════════════ -->
+<div class="grille">
+
+    <div class="gauche">
+    </div>
+
+    <div class="centre">
+        <div class="num-section">Section 4</div>
+        <h2>Conclusion et limites</h2>
+
+        <h3>Synthèse des résultats</h3>
+
+        <div class="tw">
+        <table>
+            <tr>
+                <th>Méthode</th>
+                <th>Résultat</th>
+                <th>Statut</th>
+            </tr>
+            <tr>
+                <td>Hooke (macro)</td>
+                <td>$\sim 10^{11}\ \text{J}$</td>
+                <td>Borne supérieure</td>
+            </tr>
+            <tr>
+                <td>Liaisons — 1 surface</td>
+                <td>$\sim 10^{2}\ \text{J}$</td>
+                <td>Borne inférieure</td>
+            </tr>
+            <tr>
+                <td>Liaisons — tous les plans</td>
+                <td>$\sim 10^{11}\ \text{J}$</td>
+                <td>Borne supérieure (atomisation)</td>
+            </tr>
+        </table>
+        </div>
+
+                <h3>Critique de chaque approche</h3>
+
+        <p><strong>Approche 1 — Loi de Hooke :</strong></p>
+        <p>
+            La loi de Hooke modélise la matière comme des <strong>ressorts</strong> : la force est proportionnelle à la déformation
+            ($F = E S \varepsilon$). Ce modèle n’a de sens que pour de <strong>petites</strong> déformations
+            ($\varepsilon \lesssim 10^{-3}$ pour l’acier).
+            Or ici, $\varepsilon_f = 1$ pour l’étirement : on « comprime le ressort » d’une distance égale à sa propre longueur,
+            soit <strong>mille fois</strong> au-delà du domaine où le modèle a un sens.
+        </p>
+        <p>
+            En réalité, quand on déforme un matériau aussi fortement, la force ne continue pas à augmenter
+            indéfiniment comme le prédit le modèle de ressort.
+            La loi de Hooke surestime donc fortement la force nécessaire,
+            ce qui entraîne une <strong>surestimation de l’énergie</strong>.
+        </p>
+
+        <div class="encadre encadre-rouge">
+            <strong>Verdict — Approche 1</strong>
+            $W_\text{Hooke} \sim 10^{11}\ \text{J}$ est une borne supérieure. L’énergie réelle est certainement plus faible,
+            car au-delà du domaine de validité des ressorts, la force réelle ne croît plus aussi vite.
+        </div>
+
+        <p><strong>Approche 2A — Rupture sur une surface :</strong></p>
+        <p>
+            Couper les liaisons sur une unique surface de section $S$ revient à <strong>casser</strong>
+            le bloc en deux morceaux, pas à le déformer. Or la déformation du laminage concerne
+            l’ensemble du volume, pas juste un plan de coupure.
+            Le résultat de $100\ \text{J}$ est donc une borne inférieure <strong>beaucoup trop basse</strong>.
+        </p>
+
+        <p><strong>Approche 2B — Rupture de tous les plans :</strong></p>
+        <p>
+            Casser les liaisons sur <em>tous</em> les plans atomiques ($V/l_0^3$ liaisons) revient à
+            <strong>vaporiser</strong> le bloc d’acier, c’est-à-dire à détruire intégralement sa structure.
+            L’énergie correspondante ($10^{11}\ \text{J}$) est donc une surestimation extrême :
+            en réalité, les liaisons cassées se reforment immédiatement
+            et on ne dépense qu’une fraction de cette énergie.
+        </p>
+        <p>
+            On note que $E_B \approx W_\text{Hooke} \sim 10^{11}\ \text{J}$ : ce n’est pas un hasard.
+            L’énergie de cohésion du réseau cristallin et le module d’Young découlent des mêmes
+            interactions atomiques, et pour $\varepsilon \sim 1$, les deux estimations convergent vers la même échelle.
+        </p>
+
+        <div class="encadre encadre-vert">
+            <strong>Verdict — Approche 2</strong>
+            On obtient un encadrement : $100\ \text{J} \ll E_\text{réelle} \ll 10^{11}\ \text{J}$,
+            soit 9 ordres de grandeur d’incertitude.
+        </div>
+
+        <h3>Estimation heuristique</h3>
+        <p>
+            L’intervalle obtenu est très large ($10^{2}$ à $10^{11}\ \text{J}$).
+            En l’absence de modèle plus fin, une stratégie classique des ordres de grandeur consiste à
+            estimer la valeur probable comme la <strong>moyenne géométrique</strong> des deux bornes.
+        </p>
+
+        <div class="formule">
+            $$E \sim \sqrt{E_A \times E_B} = \sqrt{100 \times 10^{11}} = \sqrt{10^{13}} \approx 3 \times 10^{6}\ \text{J}$$
+        </div>
+
+        <div class="encadre encadre-forge">
+            <strong>Pourquoi la moyenne géométrique ?</strong>
+            Lorsqu’on dispose d’une borne inférieure $a$ et d’une borne supérieure $b$
+            sur une échelle logarithmique, la valeur « centrale » est $\sqrt{ab}$, qui correspond au milieu
+            de l’intervalle $[\log a,\, \log b]$. C’est un choix <strong>heuristique</strong> (règle de prudence),
+            pas une démonstration : il fournit une estimation raisonnable en l’absence d’information supplémentaire.
+        </div>
+
+        <div class="res-ok">
+            $$E \sim 10^{6}\text{ à }10^{7}\ \text{J} \quad\approx\quad 1\text{ à }10\ \text{MJ}$$
+        </div>
+
+        <h3>Comparaison avec des énergies connues</h3>
+
+        <div class="tw">
+        <table>
+            <tr>
+                <th>Référence</th>
+                <th>Énergie</th>
+            </tr>
+            <tr>
+                <td>Ampoule 100 W pendant 1 s</td>
+                <td>$100\ \text{J}$</td>
+            </tr>
+            <tr>
+                <td>Combustion d’1 L d’essence</td>
+                <td>$\sim 3 \times 10^{7}\ \text{J}$</td>
+            </tr>
+            <tr>
+                <td><strong>Notre estimation (laminage 1 m³)</strong></td>
+                <td>$\sim 10^{6}\text{–}10^{7}\ \text{J}$</td>
+            </tr>
+            <tr>
+                <td>Batterie de voiture électrique</td>
+                <td>$\sim 10^{8}\ \text{J}$</td>
+            </tr>
+            <tr>
+                <td>Vaporiser 1 m³ d’acier</td>
+                <td>$\sim 10^{11}\ \text{J}$</td>
+            </tr>
+        </table>
+        </div>
+
+        <p>
+            L’énergie estimée ($\sim$ quelques MJ) se situe entre celle d’un litre d’essence
+            et celle d’une batterie de voiture : un ordre de grandeur <strong>plausible</strong>
+            pour un procédé industriel lourd mais courant.
+        </p>
+
+        <h3>Ouverture</h3>
+        <p>
+            Pour aller plus loin, on pourrait utiliser la <em>limite d’écoulement</em> de l’acier
+            ($\sigma_e \approx 200\text{–}400\ \text{MPa}$), qui caractérise la contrainte
+            à partir de laquelle le matériau se déforme de façon permanente (il ne revient plus à sa forme initiale).
+            L’énergie de déformation s’écrirait alors :
+        </p>
+
+        <div class="formule">
+            $$W \approx \sigma_e \times \varepsilon \times V
+            \approx 300 \times 10^{6} \times 0{,}5 \times 1
+            \approx 1{,}5 \times 10^{8}\ \text{J}$$
+        </div>
+
+        <p>
+            Cette valeur de $\sim 10^{8}\ \text{J}$ (150 MJ) est <strong>cohérente</strong> avec
+            les données industrielles de laminage à chaud, et se situe bien entre nos deux bornes.
+            Elle confirme que notre estimation heuristique de $10^{6}\text{–}10^{7}\ \text{J}$
+            est un peu basse mais dans le bon voisinage en termes d’ordres de grandeur.
+        </p>
+    </div>
+
+
+
+    <div class="droite">
+        <div class="annexe">
+            <div class="annexe-titre">Ce que l’approche A enseigne</div>
+            <div class="encadre encadre-rouge">
+                <strong>Un échec instructif</strong>
+                $100\ \text{J}$ est absurde : la déformation <em>ne peut pas</em> être localisée sur un seul plan.
+                Ce résultat montre que couper un seul plan ne suffit pas à décrire la déformation.
+            </div>
+        </div>
+
+        <div class="annexe">
+            <div class="annexe-titre">Convergence macro/micro</div>
+            <div class="encadre encadre-forge">
+                <strong>Pourquoi $E_B \approx W_\text{Hooke}$ ?</strong>
+                Le module d’Young $E$ et l’énergie de liaison $E_\text{liaison}$ sont reliés :
+                $E \sim E_\text{liaison}/l_0^3$.
+                Pour $\varepsilon \sim 1$, les deux approches donnent $\sim E_\text{liaison} \cdot V / l_0^3$.
+            </div>
+        </div>
+
+        <div class="annexe">
+        <div class="encadre encadre-vert">
+            <strong>Résultat principal</strong>
+            Encadrement : $10^{2}\ \text{J} \ll E \ll 10^{11}\ \text{J}$.
+            <br>Estimation heuristique : $E \sim 10^{6}\text{–}10^{7}\ \text{J}$.
+            <br>Valeur industrielle : $E \sim 10^{8}\ \text{J}$.
+        </div>
+        </div>
+    </div>
+
+</div><!-- fin grille conclusion -->
+
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════ -->
+<footer>CAPECL — ODG &nbsp;|&nbsp; Laminoir &nbsp;|&nbsp; Mars 2026</footer>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCRIPTS ANIMATIONS
+     ══════════════════════════════════════════════════════ -->
+<script>
+/* ─── Utilitaires communs ───────────────────────── */
+function mkEase(){ return function(t){return t<.5?2*t*t:-1+(4-2*t)*t;}; }
+function mkLerp(){ return function(a,b,t){return a+(b-a)*t;}; }
+function mkPg(){  return function(f,a,b){return Math.max(0,Math.min(1,(f-a)/(b-a)));}; }
+
+/* ════════════════════════════════════════════════
+   ANIMATION 1 — LOI DE YOUNG
+   ════════════════════════════════════════════════ */
+(function(){
+    var cv=document.getElementById('anim-young');
+    var ctx=cv.getContext('2d');
+    var W=cv.width, H=cv.height, fr=0, paused=true;
+    var ease=mkEase(), lerp=mkLerp(), pg=mkPg();
+    var btn=document.getElementById('btn-young');
+    btn.addEventListener('click',function(){
+        paused=!paused; btn.textContent=paused?'▶ Play':'⏸ Pause';
+        if(!paused) requestAnimationFrame(render);
+    });
+
+    var BF='#1a4a7a',BT='#2e6fad',BS='#0d2b4e',OR='#c85a0e',BG='#ede8df',DK='#1e1b15';
+
+    function box(cx,cy,w,h,sk){
+        var sx=sk,sy=sk*0.42;
+        ctx.fillStyle=BT;
+        ctx.beginPath();
+        ctx.moveTo(cx-w/2,cy-h/2);ctx.lineTo(cx-w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy-h/2-sy);ctx.lineTo(cx+w/2,cy-h/2);
+        ctx.closePath();ctx.fill();
+        ctx.fillStyle=BS;
+        ctx.beginPath();
+        ctx.moveTo(cx+w/2,cy-h/2);ctx.lineTo(cx+w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy+h/2-sy);ctx.lineTo(cx+w/2,cy+h/2);
+        ctx.closePath();ctx.fill();
+        ctx.fillStyle=BF;ctx.fillRect(cx-w/2,cy-h/2,w,h);
+        ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+        ctx.strokeRect(cx-w/2,cy-h/2,w,h);
+        ctx.beginPath();
+        ctx.moveTo(cx-w/2,cy-h/2);ctx.lineTo(cx-w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy-h/2-sy);ctx.lineTo(cx+w/2,cy-h/2);ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx+w/2,cy-h/2);ctx.lineTo(cx+w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy+h/2-sy);ctx.lineTo(cx+w/2,cy+h/2);ctx.stroke();
+    }
+    function arrowV(cx,y,dir){
+        ctx.strokeStyle=OR;ctx.fillStyle=OR;ctx.lineWidth=2.2;
+        ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(cx,y+22*dir);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(cx,y+22*dir);
+        ctx.lineTo(cx-5,y+14*dir);ctx.lineTo(cx+5,y+14*dir);
+        ctx.closePath();ctx.fill();
+    }
+    function arrowH(x,cy,dir){
+        ctx.strokeStyle=OR;ctx.fillStyle=OR;ctx.lineWidth=2.2;
+        ctx.beginPath();ctx.moveTo(x,cy);ctx.lineTo(x+22*dir,cy);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x+22*dir,cy);
+        ctx.lineTo(x+14*dir,cy-5);ctx.lineTo(x+14*dir,cy+5);
+        ctx.closePath();ctx.fill();
+    }
+
+    var CX=W/2,CY=H/2,SK=20,IW=160,IH=70,FH=35,FW=320,LEFT_X=W/2-160,LOOP=400;
+
+    function render(){
+        ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+        var f=fr%LOOP,bw,bh,bcx=CX,showVA=false,showHA=false;
+        if(f<62){bw=IW;bh=IH;bcx=CX;}
+        else if(f<175){bw=IW;bh=lerp(IH,FH,ease(pg(f,62,175)));bcx=CX;showVA=true;}
+        else if(f<225){bw=IW;bh=FH;bcx=lerp(CX,LEFT_X+IW/2,ease(pg(f,175,225)));}
+        else if(f<337){bw=lerp(IW,FW,ease(pg(f,225,337)));bh=FH;bcx=LEFT_X+bw/2;showHA=true;}
+        else{bw=FW;bh=FH;bcx=LEFT_X+FW/2;}
+        if(showVA){arrowV(bcx-26,CY-bh/2-28,1);arrowV(bcx+26,CY+bh/2+28,-1);}
+        box(bcx,CY,bw,bh,SK);
+        if(showHA){arrowH(bcx+bw/2+SK+5,CY,1);}
+        
+        if(!paused){fr++;requestAnimationFrame(render);}
+    }
+    render();
+})();
+
+/* ════════════════════════════════════════════════
+   ANIMATION 2 — SOUS-MÉTHODE A (découpe/collage)
+   ════════════════════════════════════════════════ */
+(function(){
+    var cv=document.getElementById('anim-atomic');
+    var ctx=cv.getContext('2d');
+    var W=cv.width,H=cv.height,fr=0,paused=true;
+    var ease=mkEase(),lerp=mkLerp(),pg=mkPg();
+    var btn=document.getElementById('btn-atomic');
+    btn.addEventListener('click',function(){
+        paused=!paused;btn.textContent=paused?'▶ Play':'⏸ Pause';
+        if(!paused) requestAnimationFrame(render);
+    });
+
+    var O1F='#c0622a',O1T='#e07a3a',O1S='#8a3d15';
+    var O2F='#b84e0a',O2T='#f09050',O2S='#7a3008';
+    var RD='#a82820',BG='#ede8df',DK='#1e1b15';
+
+    function box(cx,cy,w,h,sk,cf,ct,cs){
+        var sx=sk,sy=sk*0.42;
+        ctx.fillStyle=ct;
+        ctx.beginPath();
+        ctx.moveTo(cx-w/2,cy-h/2);ctx.lineTo(cx-w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy-h/2-sy);ctx.lineTo(cx+w/2,cy-h/2);
+        ctx.closePath();ctx.fill();
+        ctx.fillStyle=cs;
+        ctx.beginPath();
+        ctx.moveTo(cx+w/2,cy-h/2);ctx.lineTo(cx+w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy+h/2-sy);ctx.lineTo(cx+w/2,cy+h/2);
+        ctx.closePath();ctx.fill();
+        ctx.fillStyle=cf;ctx.fillRect(cx-w/2,cy-h/2,w,h);
+        ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;
+        ctx.strokeRect(cx-w/2,cy-h/2,w,h);
+        ctx.beginPath();
+        ctx.moveTo(cx-w/2,cy-h/2);ctx.lineTo(cx-w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy-h/2-sy);ctx.lineTo(cx+w/2,cy-h/2);ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(cx+w/2,cy-h/2);ctx.lineTo(cx+w/2+sx,cy-h/2-sy);
+        ctx.lineTo(cx+w/2+sx,cy+h/2-sy);ctx.lineTo(cx+w/2,cy+h/2);ctx.stroke();
+    }
+
+    var ICX=W/2,ICY=H/2,IW=150,IH=70,HH=35,SK=20;
+    var LCX=W/2-60,RCX=W/2+60,FCY=H/2;
+    var TOP_SEP=ICY-HH/2-14,BOT_SEP=ICY+HH/2+14,LOOP=462;
+
+    function render(){
+        ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
+        var f=fr%LOOP,lbl;
+        if(f<75){
+            box(ICX,ICY,IW,IH,SK,O1F,O1T,O1S);
+            lbl='Bloc initial — 10 cm × 5 m';
+        }else if(f<137){
+            box(ICX,ICY,IW,IH,SK,O1F,O1T,O1S);
+            ctx.save();ctx.globalAlpha=pg(f,75,137);
+            ctx.strokeStyle=RD;ctx.lineWidth=2.5;ctx.setLineDash([6,4]);
+            ctx.beginPath();ctx.moveTo(ICX-IW/2-4,ICY);ctx.lineTo(ICX+IW/2+SK+4,ICY);
+            ctx.stroke();ctx.setLineDash([]);ctx.restore();
+            lbl='Idée naïve : couper en deux moitiés…';
+        }else if(f<231){
+            var t=ease(pg(f,137,231));
+            var tcy=lerp(ICY-HH/2,TOP_SEP,t),bcy=lerp(ICY+HH/2,BOT_SEP,t);
+            box(ICX,bcy,IW,HH,SK,O1F,O1T,O1S);
+            box(ICX,tcy,IW,HH,SK,O2F,O2T,O2S);
+            ctx.strokeStyle=RD;ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+            ctx.beginPath();
+            ctx.moveTo(ICX-IW/2-4,(tcy+HH/2+bcy-HH/2)/2);
+            ctx.lineTo(ICX+IW/2+SK+4,(tcy+HH/2+bcy-HH/2)/2);
+            ctx.stroke();ctx.setLineDash([]);
+            lbl='Séparation — 1 surface atomique';
+        }else if(f<344){
+            var t=ease(pg(f,231,344));
+            box(lerp(ICX,LCX,t),lerp(BOT_SEP,FCY,t),IW,HH,SK,O1F,O1T,O1S);
+            box(lerp(ICX,RCX,t),lerp(TOP_SEP,FCY,t),IW,HH,SK,O2F,O2T,O2S);
+            lbl='…puis on colle bout à bout';
+        }else if(f<394){
+            var g=lerp(2,0,ease(pg(f,344,394)));
+            box(LCX-g/2,FCY,IW,HH,SK,O1F,O1T,O1S);
+            box(RCX+g/2,FCY,IW,HH,SK,O2F,O2T,O2S);
+            lbl='Tôle finale — 5 cm × 10 m';
+        }else{
+            box(LCX,FCY,IW,HH,SK,O1F,O1T,O1S);
+            box(RCX,FCY,IW,HH,SK,O2F,O2T,O2S);
+            lbl='⚠ 1 seule surface → 100 J — absurde !';
+        }
+        
+        if(!paused){fr++;requestAnimationFrame(render);}
+    }
+    render();
+})();
+
+</script>
+
+</body>
+</html>
